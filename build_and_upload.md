@@ -70,3 +70,12 @@ git push origin 0.1.5
 ```
 
 
+## install from bitbucket
+```bash
+pip install git+https://bitbucket.org/username/reponame.git@branchname
+```
+
+## install using ssh
+```bash
+ pip install git+ssh://git@bitbucket.org/olah-healthcare/utility-toolkit.git@branchname
+```
