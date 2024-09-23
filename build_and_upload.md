@@ -62,12 +62,14 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git checkout -b release-0.1.5 develop
+git checkout -b release-0.1.6 develop
 git merge develop
-git tag -a 0.1.5 -m "release 0.1.5"
-git push origin release-0.1.5
-git push origin 0.1.5
+git tag -a v0.1.6 -m "release 0.1.6"
+git commit -m "release 0.1.6"
+git push origin v0.1.6
+git push origin release-0.1.6
 ```
+
 
 
 ## install from bitbucket
