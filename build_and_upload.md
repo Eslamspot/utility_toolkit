@@ -4,13 +4,15 @@
   
 
 ## build
-
-    python -m build 
+```bash
+python -m build
+```
    
 ## Upload to pypi
-    ``` bash
-    twine upload dist/* --skip-existing
-    ```
+```bash
+python -m twine upload dist/* --skip-existing
+```
+
 ## create version
 Ensure you're on the branch you want to update:
 ```bash
@@ -65,6 +67,7 @@ clone this code to a new branch
 git checkout -b release-0.1.6 develop
 git merge develop
 git tag -a v0.1.6 -m "release 0.1.6"
+git commit -m "release 0.1.6"
 git push origin v0.1.6
 git push origin release-0.1.6
 ```

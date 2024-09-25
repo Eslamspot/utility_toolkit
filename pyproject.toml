@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "utility_toolkit"
-version = "0.1.5"
+version = "0.1.6"
 description = "A comprehensive toolkit for AWS operations, database handling, and general utilities."
 readme = "README.md"
 authors = [{ name = "Eslam Hasanen", email = "Eslamspot@gmail.com" }]
