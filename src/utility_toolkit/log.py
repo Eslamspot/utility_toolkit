@@ -1,9 +1,12 @@
 import functools
+import json
 import logging
-import os
+import threading
 import time
+from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
+import psutil
 
 # List of expected secret keys/names including AWS specific items
 secret_items = [
@@ -27,8 +30,43 @@ secret_items = [
 ]
 
 
+def make_serializable(obj):
+    if isinstance(obj, (str, int, float, bool, type(None))):
+        return obj
+    elif isinstance(obj, (list, tuple)):
+        return [make_serializable(item) for item in obj]
+    elif isinstance(obj, dict):
+        return {key: make_serializable(value) for key, value in obj.items()}
+    else:
+        return str(obj)
+
+
+def format_duration(duration):
+    from datetime import timedelta
+    # Convert duration to timedelta
+    duration_td = timedelta(seconds=duration)
+
+    # Extract hours, minutes, and seconds
+    hours, remainder = divmod(duration_td.seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+
+    # Format the duration string
+    parts = []
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    if seconds > 0 or (hours == 0 and minutes == 0):
+        parts.append(f"{seconds:.2f}s")
+
+    return " ".join(parts)
+
+
 # Define a custom formatter to add colors
 class CustomFormatter(logging.Formatter):
+    """
+    A custom formatter that adds colors to log messages based on their level.
+    """
     grey = "\x1b[38;21m"
     green = "\x1b[32;21m"
     yellow = "\x1b[33;21m"
@@ -79,56 +117,66 @@ logging.basicConfig(
 
 def log_decorator(secrets=None):
     """
-    A decorator that logs the execution of a function, including its arguments and execution time.
-    Optionally masks specified secret arguments.
+      A decorator that logs function calls, their arguments, and performance metrics.
 
-    Args:
-        secrets (list, optional): A list of argument names to be masked in the logs. Defaults to None.
+      Args:
+          secrets (list, optional): A list of argument names to be masked in the logs.
+                                    Defaults to the predefined secret_items list.
 
-    Returns:
-        function: The decorated function with logging functionality.
+      Returns:
+          function: The decorated function with logging functionality.
 
-    Example:
-        @log_decorator(secrets=['password'])
-        def my_function(username, password):
-            pass
-    """
+      Example:
+          @log_decorator(secrets=['password'])
+          ... def login(username, password):
+          ...     # Function implementation
+          ...     return "Login successful"
+
+          result = login("user123", "secretpass")
+          # This will log something like:
+          # {"function": "login", "args": ["user123"], "kwargs": {"password": "***"},
+          #  "duration": "0.01", "cpu_usage": "0.5%", "memory_usage": "0.1%", "thread": "MainThread"}
+      """
     if not secrets:
         secrets = secret_items
 
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            # Get argument names
-            arg_names = func.__code__.co_varnames[:func.__code__.co_argcount]
+            logger = logging.getLogger(func.__module__)
 
-            # Construct a dictionary of arguments and their values
-            arguments = dict(zip(arg_names, args))
-            # Add keyword arguments to the dictionary
-            arguments.update(kwargs)
-
-            # Mask secret variables
-            for secret in secrets:
-                if secret in arguments:
-                    arguments[secret] = "***"
-
-            # Create a string representation of arguments
-            args_repr = [f"{key}={value!r}" for key, value in arguments.items() if key != 'self']
-
-            function_arguments = ", ".join(args_repr)
+            # Mask secrets
+            masked_args = mask_secrets(args, secrets)
+            masked_kwargs = mask_secrets(kwargs, secrets)
 
             start_time = time.time()
-            logging.info(f"Starting '{func.__name__}' with arguments: {function_arguments}")
+            start_process = psutil.Process()
+            start_cpu_times = start_process.cpu_times()
 
-            result = func(*args, **kwargs)
+            try:
+                result = func(*args, **kwargs)
+            except Exception as e:
+                logger.exception(f"Exception in {func.__name__}: {str(e)}")
+                raise
+            finally:
+                end_time = time.time()
+                end_cpu_times = start_process.cpu_times()
 
-            end_time = time.time()
             duration = end_time - start_time
-            # if result too long, log the length of the result instead
-            if len(str(result)) > 50:
-                logging.info(f"Finished '{func.__name__}' in {duration:.2f} secs with result length: {len(str(result))}")
-            else:
-                logging.info(f"Finished '{func.__name__}' in {duration:.2f} secs with result: {result!r}")
+            cpu_usage = sum(end_cpu_times) - sum(start_cpu_times)
+            memory_usage = start_process.memory_percent()
+
+            log_data = {
+                "function": func.__name__,
+                "args": make_serializable(masked_args),
+                "kwargs": make_serializable(masked_kwargs),
+                "duration": format_duration(duration),
+                "cpu_time": f"{cpu_usage:.2f}",
+                "memory_usage": f"{memory_usage:.2f}%",
+                "thread": threading.current_thread().name,
+            }
+
+            logger.info(json.dumps(log_data))
 
             return result
 
@@ -137,37 +185,58 @@ def log_decorator(secrets=None):
     return decorator
 
 
+def mask_secrets(data, secrets):
+    """
+  Recursively mask secret values in data structures.
+
+  Args:
+      data: The data structure to mask secrets in.
+      secrets (list): A list of keys to be considered as secrets.
+
+  Returns:
+      The data structure with secrets masked.
+
+  Example:
+      data = {"username": "user123", "password": "secretpass", "nested": {"api_key": "12345"}}
+      masked_data = mask_secrets(data, ['password', 'api_key'])
+      print(masked_data)
+      {'username': 'user123', 'password': '***', 'nested': {'api_key': '***'}}
+  """
+    if isinstance(data, dict):
+        return {k: "***" if k in secrets else mask_secrets(v, secrets) for k, v in data.items()}
+    elif isinstance(data, (list, tuple)):
+        return type(data)(mask_secrets(v, secrets) for v in data)
+    else:
+        return data
+
+
 def class_log_decorator(exclude=None):
     """
-    A decorator to log method calls in a class. This decorator can be used to 
-    automatically apply a logging decorator to all methods in a class, except 
-    those specified in the `exclude` list.
+      A decorator to apply logging to all methods of a class, except those specified.
 
-    Args:
-        exclude (list, optional): A list of method names to exclude from logging. 
-                                  Defaults to None.
+      Args:
+          exclude (list, optional): A list of method names to exclude from logging.
+                                    Defaults to None.
 
-    Returns:
-        function: A class decorator that applies the logging decorator to all 
-                  methods in the class except those in the `exclude` list.
+      Returns:
+          function: A class decorator that applies the logging decorator to all
+                    methods in the class except those in the `exclude` list.
 
-    Example:
-        >>> @class_log_decorator(exclude=['method_to_exclude'])
-        ... class MyClass:
-        ...     def method1(self):
-        ...         pass
-        ...     
-        ...     def method2(self):
-        ...         pass
-        ...     
-        ...     def method_to_exclude(self):
-        ...         pass
-        ...
-        >>> obj = MyClass()
-        >>> obj.method1()  # This will be logged
-        >>> obj.method2()  # This will be logged
-        >>> obj.method_to_exclude()  # This will not be logged
-    """
+      Example:
+          @class_log_decorator(exclude=['internal_method'])
+          ... class UserManager:
+          ...     def create_user(self, username, password):
+          ...         # Method implementation
+          ...         return f"User {username} created"
+          ...
+          ...     def internal_method(self):
+          ...         # This method won't be logged
+          ...         pass
+
+          manager = UserManager()
+          manager.create_user("newuser", "newpass")
+          # This will log the create_user method call, but not internal_method
+      """
     if exclude is None:
         exclude = []
 
@@ -180,20 +249,38 @@ def class_log_decorator(exclude=None):
     return class_decorator
 
 
-def setup_logger(name, log_to_console):
-    logger = logging.getLogger(name)
-    logger.setLevel(logging.DEBUG)  # or whatever level you want
-    logger.propagate = False  # Prevent the log messages from being passed to the root logger
+def setup_logger(name, log_to_console, max_bytes=10 * 1024 * 1024, backup_count=5):
+    """
+      Set up a logger with both file and optional console logging.
 
-    # create file handler
-    file_handler = logging.FileHandler(local_log_file_path)
+      Args:
+          name (str): The name of the logger.
+          log_to_console (bool): Whether to log to console in addition to file.
+          max_bytes (int, optional): Maximum size of each log file. Defaults to 10MB.
+          backup_count (int, optional): Number of backup log files to keep. Defaults to 5.
+
+      Returns:
+          logging.Logger: Configured logger object.
+
+      Example:
+          logger = setup_logger("my_app_logger", log_to_console=True)
+          logger.info("Application started")
+          # This will log to both file and console
+      """
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
+
+    # create rotating file handler
+    file_handler = RotatingFileHandler(
+        local_log_file_path, maxBytes=max_bytes, backupCount=backup_count
+    )
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 
     logger.addHandler(file_handler)
 
     if log_to_console:
-        # create console handler
         console_handler = logging.StreamHandler()
         console_handler.setLevel(logging.INFO)
         console_handler.setFormatter(CustomFormatter())
