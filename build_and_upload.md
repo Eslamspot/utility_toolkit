@@ -72,11 +72,11 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git checkout -b release-0.1.7 
+git checkout -b release-0.1.8 
 git merge develop
-git tag -a v0.1.7 -m "release 0.1.7"
-git push origin v0.1.7
-git push origin release-0.1.7
+git tag -a v0.1.8 -m "release 0.1.8"
+git push origin v0.1.8
+git push origin release-0.1.8
 ```
 
 
