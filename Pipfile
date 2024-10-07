@@ -17,6 +17,9 @@ python-magic = "*"
 reportlab = "*"
 requests = "*"
 sqlalchemy = "*"
+pdfkit = "*"
+cryptography = "*"
+psutil = "*"
 
 [dev-packages]
 pipreqs = "*"

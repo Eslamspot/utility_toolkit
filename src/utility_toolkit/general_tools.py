@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import io
 import json
+import os
 import platform
 import re
 import shlex
@@ -14,13 +15,15 @@ from pathlib import Path
 from typing import List
 from typing import Tuple, Optional
 
-import magic
 import requests
 from PIL import Image
 from bs4 import BeautifulSoup
 from cryptography.fernet import Fernet
 
-from . import log
+try:
+    from . import log
+except ImportError:
+    import log
 
 
 # Function to add a timeout to a function
@@ -29,9 +32,29 @@ class TimeoutException(Exception):
 
 
 def timeout(seconds):
+    """
+    Decorator to add a timeout to a function.
+
+    Args:
+        seconds (int): The maximum number of seconds the function is allowed to run.
+
+    Returns:
+        function: The decorated function with timeout functionality.
+
+    Raises:
+        TimeoutException: If the function execution time exceeds the specified timeout.
+        Exception: If the function raises an exception during execution.
+    Example:
+        @timeout(5)
+        def my_function():
+            # Do something that might take a long time
+            pass
+    """
+
     def decorator(func):
         import threading
         from functools import wraps
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = [None]
@@ -79,6 +102,46 @@ def write_list_to_csv_file(data: list, filename: str or Path) -> None:
 
 
 @log.log_decorator()
+def write_list_to_text_file(list_to_write: list, file_path: str or Path) -> None:
+    """
+    Write a list to a text file.
+
+    Args:
+        list_to_write (list): The list to write to the file.
+        file_path (str or Path): The path to the output file.
+
+    Returns:
+        None
+
+    Example:
+    data = ['Alice', 'Bob', 'Charlie']
+    write_list_to_text_file(data, 'names.txt')
+    """
+    with open(file_path, 'w') as file:
+        for item in list_to_write:
+            file.write(f'{item}\n')
+
+
+@log.log_decorator()
+def write_to_file(file_path: str or Path, data: str) -> None:
+    """
+    Write data to a file.
+
+    Args:
+        file_path (str or Path): The path to the file to write to.
+        data (str): The data to write to the file.
+
+    Returns:
+        None
+
+    Example:
+        write_to_file('output.txt', 'Hello, World!')
+    """
+    with open(file_path, 'w') as file:
+        file.write(data)
+
+
+@log.log_decorator()
 def write_dict_to_text_file(dictionary: dict or list, file_path: str or Path) -> None:
     """
     Save a dictionary or list to a text file in JSON format.
@@ -103,6 +166,64 @@ def write_dict_to_text_file(dictionary: dict or list, file_path: str or Path) ->
 def sort_dict_by_value(d: dict):
     from collections import OrderedDict
     return dict(OrderedDict(sorted(d.items(), key=lambda x: x[1], reverse=True)))
+
+
+@log.log_decorator()
+def read_file(file_path: str or Path) -> list[list[str]]:
+    """
+    Read the content of a file.
+
+    Args:
+        file_path (str or Path): The path to the file to read.
+
+    Returns:
+        str: The content of the file as a string. If the file is a CSV, returns a list of lists.
+
+    Raises:
+        FileNotFoundError: If the file does not exist.
+        IOError: If there is an error reading the file.
+    """
+    if str(file_path).endswith('.gz'):
+        with gzip.open(file_path, 'rt') as file:
+            return file.read()
+    elif str(file_path).endswith('.csv'):
+        with open(file_path, 'r') as file:
+            return list(csv.reader(file))
+    else:
+        with open(file_path, 'r') as file:
+            return file.read()
+
+
+@log.log_decorator()
+def stream_big_file(file_path: str or Path, chunk_size: int = 1024) -> bytes:
+    """
+    Stream a large file in chunks without splitting lines.
+
+    Args:
+        file_path (str or Path): The path to the file to stream.
+        chunk_size (int): The size of each chunk in bytes.
+
+    Returns:
+        bytes: The content of the file as bytes.
+
+    Example:
+        data = stream_big_file('large_file.dat')
+        print(data)
+    """
+    with open(file_path, 'rb') as file:
+        buffer = b''
+        while True:
+            chunk = file.read(chunk_size)
+            if not chunk:
+                if buffer:
+                    yield buffer
+                break
+            buffer += chunk
+            if b'\n' in buffer:
+                lines = buffer.split(b'\n')
+                for line in lines[:-1]:
+                    yield line + b'\n'
+                buffer = lines[-1]
 
 
 @log.log_decorator()
@@ -156,11 +277,37 @@ def advanced_recognize_file_type(file_path):
     file_type = recognize_file_type('document.pdf')
     print(file_type)  # Output: application/pdf
     """
+    try:
+        import magic
+    except ImportError:
+        import platform
+        if platform.system() == 'Windows':
+            raise ImportError("Please install the 'libmagic' library using the command 'pip install python-magic-bin'.")
+        elif platform.system() == 'Linux':
+            raise ImportError("Please install the 'libmagic' library using the command 'apt-get install libmagic1'.")
+        elif platform.system() == 'Darwin':
+            raise ImportError("Please install the 'libmagic' library using the command 'brew install libmagic'.")
     return magic.from_file(file_path, mime=True)
 
 
 def recognize_file_type(data):
-    import magic
+    import platform
+    try:
+        import magic
+    except ImportError:
+        if platform.system() == 'Windows':
+            # pip install python-magic-bin
+            import subprocess
+            command = f'magick identify -format "%m" {data}'
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            output, error = process.communicate()
+            if error:
+                raise Exception(f"Error: {error}")
+            raise ImportError("Please install the 'libmagic' library using the command 'pip install python-magic-bin'.")
+        elif platform.system() == 'Linux':
+            raise ImportError("Please install the 'libmagic' library using the command 'apt-get install libmagic1'.")
+        elif platform.system() == 'Darwin':
+            raise ImportError("Please install the 'libmagic' library using the command 'brew install libmagic'.")
     # pipenv install python-magic
     import mimetypes
 
@@ -658,9 +805,9 @@ def list_files_in_directory(directory: str or Path) -> list:
 
 
 @log.log_decorator()
-def compress_file(file_path: str or Path, output_path: str or Path) -> None:
+def gz_compress_file(file_path: str or Path, output_path: str or Path) -> None:
     """
-    Compress a file using gzip.
+    GZ Compress a file using gzip.
 
   Args:
       file_path (str or Path): The path to the file to compress.
@@ -670,7 +817,7 @@ def compress_file(file_path: str or Path, output_path: str or Path) -> None:
       None
 
     Example:
-    compress_file('large_file.dat', 'large_file.dat.gz')
+    gz_compress_file('large_file.dat', 'large_file.dat.gz')
     """
     with open(file_path, 'rb') as f_in:
         with gzip.open(output_path, 'wb') as f_out:
@@ -678,9 +825,37 @@ def compress_file(file_path: str or Path, output_path: str or Path) -> None:
 
 
 @log.log_decorator()
-def decompress_file(file_path: str or Path, output_path: str or Path) -> None:
+def gz_it(file_paths: List[str or Path], output_path: str or Path, delete_original_files=False) -> str or Path:
     """
-    Decompress a gzip file.
+    GZ Compress multiple files and directories.
+
+  Args:
+      file_paths (List[str or Path]): A list of file paths to compress.
+      output_path (str or Path): The path for the compressed output file.
+      delete_original_files (bool): Whether to delete the original files after compressing.
+
+  Returns:
+      str or Path: The path to the compressed file.
+
+    Example:
+    files = ['file1.txt', 'file2.pdf', 'directory1']
+    gz_it(files, 'archive.gz')
+    """
+    with gzip.open(output_path, 'wb') as f_out:
+        for file in file_paths:
+            with open(file, 'rb') as f_in:
+                shutil.copyfileobj(f_in, f_out)
+
+    if delete_original_files:
+        for file in file_paths:
+            Path(file).unlink()
+    return output_path
+
+
+@log.log_decorator()
+def gz_decompress_file(file_path: str or Path, output_path: str or Path) -> None:
+    """
+    GZ Decompress a gzip file.
 
   Args:
       file_path (str or Path): The path to the compressed file.
@@ -690,11 +865,92 @@ def decompress_file(file_path: str or Path, output_path: str or Path) -> None:
       None
 
     Example:
-    decompress_file('large_file.dat.gz', 'large_file.dat')
+    gz_decompress_file('large_file.dat.gz', 'large_file.dat')
     """
     with gzip.open(file_path, 'rb') as f_in:
         with open(output_path, 'wb') as f_out:
             f_out.writelines(f_in)
+
+
+@log.log_decorator()
+def zip_it(file_paths: List[str or Path], output_path: str or Path, delete_original_files=False) -> str or Path:
+    """
+    Zip compress multiple files and directories.
+
+  Args:
+      file_paths (List[str or Path]): A list of file paths to compress.
+      output_path (str or Path): The path for the compressed output file.
+      delete_original_files (bool): Whether to delete the original files after compressing.
+
+  Returns:
+      str or Path: The path to the compressed file.
+
+    Example:
+    files = ['file1.txt', 'file2.pdf', 'directory1']
+    zip_it(files, 'archive.zip')
+    """
+    with zipfile.ZipFile(output_path, 'w') as zipf:
+        for file in file_paths:
+            if Path(file).is_dir():
+                for root, _, files in os.walk(file):
+                    for f in files:
+                        zipf.write(str(os.path.join(root, f)))
+            else:
+                zipf.write(file)
+
+    if delete_original_files:
+        for file in file_paths:
+            Path(file).unlink()
+    return output_path
+
+
+@log.log_decorator()
+def zip_compress_files(file_paths: List[str or Path], output_path: str or Path,
+                       delete_original_files=False) -> str or Path:
+    """
+    Zip compress multiple files.
+
+  Args:
+      file_paths (List[str or Path]): A list of file paths to compress.
+      output_path (str or Path): The path for the compressed output file.
+      delete_original_files (bool): Whether to delete the original files after compressing.
+
+  Returns:
+      None
+
+    Example:
+    files = ['file1.txt', 'file2.pdf', 'file3.jpg']
+    zip_compress_files(files, 'archive.zip')
+    """
+    with zipfile.ZipFile(output_path, 'w') as zipf:
+        for file in file_paths:
+            zipf.write(file, Path(file).name)
+
+    if delete_original_files:
+        for file in file_paths:
+            Path(file).unlink()
+    return output_path
+
+
+@log.log_decorator()
+def zip_decompress_file(file_path: str or Path, output_path: str or Path) -> str or Path:
+    """
+    Zip decompress a file.
+
+  Args:
+      file_path (str or Path): The path to the zip file.
+      output_path (str or Path): The path for the decompressed output file.
+
+  Returns:
+      None
+
+    Example:
+    zip_decompress_file('archive.zip', 'extracted_folder')
+    """
+    with zipfile.ZipFile(file_path, 'r') as zip_ref:
+        zip_ref.extractall(output_path)
+
+    return output_path
 
 
 @log.log_decorator()
@@ -980,7 +1236,7 @@ def sanitize_filename(filename: str) -> str:
     pattern = r'[^a-zA-Z0-9\-_.]'
     # Replace characters that don't match the pattern with an empty string
     sanitized_filename = re.sub(pattern, '-', filename)
-    return sanitized_filename
+    return sanitized_filename.replace('--', '-')  # Remove double hyphens
 
 
 def str_to_bool(value: str) -> bool:
@@ -994,7 +1250,7 @@ def str_to_bool(value: str) -> bool:
     return value.strip().lower() in truthy_values
 
 
-def log_to_csv(data: list[dict[str, any]], file_path: Path, field_names: list[str]) -> None:
+def write_to_csv(data: list[dict[str, any]], file_path: Path, field_names: list[str]) -> None:
     """
     Log the given data to a CSV file at the specified file path.
 
@@ -1102,3 +1358,54 @@ def run_cli_command(command: str, shell: bool = False, timeout: Optional[int] = 
         return 1, "", f"OS error occurred: {str(e)}"
     except Exception as e:
         return 1, "", f"An unexpected error occurred: {str(e)}"
+
+
+@log.log_decorator()
+def random_string(length: int = 8) -> str:
+    import random
+    import string
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+
+# calculate string size by kb
+@log.log_decorator()
+def calculate_string_size_kb(string: str) -> float:
+    """
+    Calculate the size of a string in kilobytes (KB).
+
+    Args:
+        string (str): The input string.
+
+    Returns:
+        int: The size of the string in kilobytes.
+
+    Example:
+    size = calculate_string_size_kb('Hello, World!')
+    print(f"String size: {size} KB")
+    """
+    return round(len(string.encode('utf-8')) / 1024, 3)
+
+
+# generate random number between 2 numbers with step size and decimal points as options
+def random_number(start: int, end: int, step: float = 1, decimal_points: int = 0) -> float or int:
+    """
+    Generate a random number within a specified range with a given step size and decimal points.
+
+    Args:
+        start (int): The start of the range.
+        end (int): The end of the range.
+        step (float, optional): The step size for the random number. Defaults to 1.
+        decimal_points (int, optional): The number of decimal points for the random number. Defaults to 0.
+
+    Returns:
+        float: A random number within the specified range.
+
+    Example:
+    number = random_number(1, 10, 0.5, 2)
+    print(f"Random number: {number}")
+    or no decimal points
+    number = random_number(1, 10, 1)
+    print(f"Random number: {number}")
+    """
+    import random
+    return round(random.uniform(start, end) / step) * step

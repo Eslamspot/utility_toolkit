@@ -1,16 +1,79 @@
-## change version
+## Generate requirements.txt
 
-	 go to pyproject.toml& scr/utility_toolkit/__init__.py and update the version  
-  
+
+### Scan the code using sonarqube locally
+
+```bash
+docker pull sonarqube
+docker run -d --name sonarqube -p 9000:9000 -v ~/docker_data/sonarqube/conf:/opt/sonarqube/conf -v ~/docker_data/sonarqube/data:/opt/sonarqube/data -v ~/docker_data/sonarqube/logs:/opt/sonarqube/logs -v ~/docker_data/sonarqube/extensions:/opt/sonarqube/extensions sonarqube
+```
+
+
+2. Set sonar qube admin password:
+
+set the password to `admin` in the sonarqube container to wiwna9-wakmiw-zEkjun
+
+
+Install SonarScanner and add it to your system's PATH.
+```bash
+ brew install sonar-scanner
+```
+
+3. Generate admin token for sonarqube:
+   1. go to http://127.0.0.1:9000/account/security/
+   2. Generate a token for the admin user.
+   3. Token: admin
+   4. Name: admin
+   5. type: Global Analysis Token
+   6. copy the token to use it later.
+   
+4. Create a new project in SonarQube and generate a token for the project.
+   1. create new project in SonarQube and generate a token for the project.
+   2. Project Name: utility_toolkit
+   3. Project Key: utility_toolkit
+   4. How do you want to analyze your repository? Locally.
+   5. Token: Use existing token as in point 3 -> 6
+
+4. If you generate a token, you can use it to run the SonarScanner:
+
+# get token as input from user
+```bash
+echo -n "Enter the token: "
+read token
+```
+
+```bash
+sonar-scanner \
+  -Dsonar.projectKey=utility_toolkit \
+  -Dsonar.sources=. \
+  -Dsonar.host.url=http://127.0.0.1:9000 \
+  -Dsonar.token=${token}
+```
+
+
+
+```bash
+pipreqs . --force
+```
+
+## change version
+```bash
+go to pyproject.toml& scr/utility_toolkit/__init__.py and update the version
+```
+
+## update version and requirements in pyproject.toml
+open file pyproject.toml and update requirements ad in requirements.txt and update version
 
 ## build
-
-    python -m build 
+```bash
+python -m build
+```
    
 ## Upload to pypi
-    ``` bash
-    twine upload dist/* --skip-existing
-    ```
+``` bash
+twine upload dist/* --skip-existing
+```
+
 ## create version
 Ensure you're on the branch you want to update:
 ```bash
@@ -62,12 +125,15 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git checkout -b release-0.1.5 develop
+git checkout -b release-0.1.8 
 git merge develop
-git tag -a 0.1.5 -m "release 0.1.5"
-git push origin release-0.1.5
-git push origin 0.1.5
+git tag -a v0.1.8 -m "release 0.1.8"
+git push origin v0.1.8
+git push origin release-0.1.8
+git push bitbucket v0.1.8
+git push bitbucket release-0.1.8
 ```
+
 
 
 ## install from bitbucket
