@@ -16,6 +16,14 @@ pip install utility_toolkit
 - SQLite Handler: Simplified SQLite database management
 - General Tools: A collection of utility functions for common tasks
 
+## Changes and What's New
+
+- **Version 0.1.8** (Date: 2024-10-04)
+  - Improved error handling in PostgreSQL and SQLite handlers.
+  - Introduced new utility functions for dynamodb handler.
+  - Enhance logging capabilities for better debugging.
+  - Performance optimizations and bug fixes.
+
 ## Usage
 
 Here are some quick examples of how to use Utility Toolkit:

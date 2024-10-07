@@ -1,16 +1,26 @@
-## change version
+## Generate requirements.txt
+```bash
+pipreqs . --force
+```
 
-	 go to pyproject.toml& scr/utility_toolkit/__init__.py and update the version  
-  
+## change version
+```bash
+go to pyproject.toml& scr/utility_toolkit/__init__.py and update the version
+```
+
+## update version and requirements in pyproject.toml
+open file pyproject.toml and update requirements ad in requirements.txt and update version
 
 ## build
-
-    python -m build 
+```bash
+python -m build
+```
    
 ## Upload to pypi
-    ``` bash
-    twine upload dist/* --skip-existing
-    ```
+``` bash
+twine upload dist/* --skip-existing
+```
+
 ## create version
 Ensure you're on the branch you want to update:
 ```bash
@@ -62,11 +72,13 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git checkout -b release-0.1.6 develop
+git checkout -b release-0.1.8 
 git merge develop
-git tag -a v0.1.6 -m "release 0.1.6"
-git push origin v0.1.6
-git push origin release-0.1.6
+git tag -a v0.1.8 -m "release 0.1.8"
+git push origin v0.1.8
+git push origin release-0.1.8
+git push bitbucket v0.1.8
+git push bitbucket release-0.1.8
 ```
 
 

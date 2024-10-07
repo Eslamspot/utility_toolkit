@@ -4,6 +4,7 @@ import gzip
 import hashlib
 import io
 import json
+import os
 import platform
 import re
 import shlex
@@ -13,15 +14,16 @@ import zipfile
 from pathlib import Path
 from typing import List
 from typing import Tuple, Optional
-import os
 
-import magic
 import requests
 from PIL import Image
 from bs4 import BeautifulSoup
 from cryptography.fernet import Fernet
 
-from . import log
+try:
+    from . import log
+except ImportError:
+    import log
 
 
 # Function to add a timeout to a function
@@ -48,6 +50,7 @@ def timeout(seconds):
             # Do something that might take a long time
             pass
     """
+
     def decorator(func):
         import threading
         from functools import wraps
@@ -274,11 +277,37 @@ def advanced_recognize_file_type(file_path):
     file_type = recognize_file_type('document.pdf')
     print(file_type)  # Output: application/pdf
     """
+    try:
+        import magic
+    except ImportError:
+        import platform
+        if platform.system() == 'Windows':
+            raise ImportError("Please install the 'libmagic' library using the command 'pip install python-magic-bin'.")
+        elif platform.system() == 'Linux':
+            raise ImportError("Please install the 'libmagic' library using the command 'apt-get install libmagic1'.")
+        elif platform.system() == 'Darwin':
+            raise ImportError("Please install the 'libmagic' library using the command 'brew install libmagic'.")
     return magic.from_file(file_path, mime=True)
 
 
 def recognize_file_type(data):
-    import magic
+    import platform
+    try:
+        import magic
+    except ImportError:
+        if platform.system() == 'Windows':
+            # pip install python-magic-bin
+            import subprocess
+            command = f'magick identify -format "%m" {data}'
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            output, error = process.communicate()
+            if error:
+                raise Exception(f"Error: {error}")
+            raise ImportError("Please install the 'libmagic' library using the command 'pip install python-magic-bin'.")
+        elif platform.system() == 'Linux':
+            raise ImportError("Please install the 'libmagic' library using the command 'apt-get install libmagic1'.")
+        elif platform.system() == 'Darwin':
+            raise ImportError("Please install the 'libmagic' library using the command 'brew install libmagic'.")
     # pipenv install python-magic
     import mimetypes
 
@@ -1336,3 +1365,47 @@ def random_string(length: int = 8) -> str:
     import random
     import string
     return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+
+# calculate string size by kb
+@log.log_decorator()
+def calculate_string_size_kb(string: str) -> float:
+    """
+    Calculate the size of a string in kilobytes (KB).
+
+    Args:
+        string (str): The input string.
+
+    Returns:
+        int: The size of the string in kilobytes.
+
+    Example:
+    size = calculate_string_size_kb('Hello, World!')
+    print(f"String size: {size} KB")
+    """
+    return round(len(string.encode('utf-8')) / 1024, 3)
+
+
+# generate random number between 2 numbers with step size and decimal points as options
+def random_number(start: int, end: int, step: float = 1, decimal_points: int = 0) -> float or int:
+    """
+    Generate a random number within a specified range with a given step size and decimal points.
+
+    Args:
+        start (int): The start of the range.
+        end (int): The end of the range.
+        step (float, optional): The step size for the random number. Defaults to 1.
+        decimal_points (int, optional): The number of decimal points for the random number. Defaults to 0.
+
+    Returns:
+        float: A random number within the specified range.
+
+    Example:
+    number = random_number(1, 10, 0.5, 2)
+    print(f"Random number: {number}")
+    or no decimal points
+    number = random_number(1, 10, 1)
+    print(f"Random number: {number}")
+    """
+    import random
+    return round(random.uniform(start, end) / step) * step
