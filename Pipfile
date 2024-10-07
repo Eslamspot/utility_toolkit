@@ -19,6 +19,7 @@ requests = "*"
 sqlalchemy = "*"
 pdfkit = "*"
 cryptography = "*"
+psutil = "*"
 
 [dev-packages]
 pipreqs = "*"
