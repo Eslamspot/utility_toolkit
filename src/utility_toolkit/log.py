@@ -67,25 +67,19 @@ class CustomFormatter(logging.Formatter):
     """
     A custom formatter that adds colors to log messages based on their level.
     """
-    grey = "\x1b[38;21m"
-    green = "\x1b[32;21m"
-    yellow = "\x1b[33;21m"
-    red = "\x1b[31;21m"
+    grey = "\x1b[38;20m"
+    green = "\x1b[32;20m"
+    yellow = "\x1b[33;20m"
+    red = "\x1b[31;20m"
     bold_red = "\x1b[31;1m"
-    bold = "\033[1m"
-    grey_bold = bold + grey
-    green_bold = bold + green
-    yellow_bold = bold + yellow
-    red_bold = bold + red
-
     reset = "\x1b[0m"
     format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s (%(filename)s:%(lineno)d)"
 
     FORMATS = {
-        logging.DEBUG: grey + bold + format + reset,
-        logging.INFO: green + bold + format + reset,
-        logging.WARNING: yellow + bold + format + reset,
-        logging.ERROR: red + bold + format + reset,
+        logging.DEBUG: grey + format + reset,
+        logging.INFO: green + format + reset,
+        logging.WARNING: yellow + format + reset,
+        logging.ERROR: red + format + reset,
         logging.CRITICAL: bold_red + format + reset
     }
 
@@ -292,40 +286,10 @@ def setup_logger(name, log_to_console, max_bytes=10 * 1024 * 1024, backup_count=
 # silent logger to just log to file and not print to console
 silent_logger = setup_logger("silent_logger", log_to_console=False)
 
-# Examples:
-# logging.debug('Quick zephyrs blow, vexing daft Jim.')
-# logging.info('How quickly daft jumping zebras vex.')
-# logging.warning('Jail zesty vixen who grabbed pay from quack.')
-# logging.error('The five boxing wizards jump quickly.')
-
-
-# Example usage with a class
-# @class_log_decorator
-# class MathOperations:
-#     def add(self, x, y, password=None):
-#         return x + y
-#
-#     def multiply(self, x, y):
-#         return x * y
-#
-#
-# math_ops = MathOperations()
-# math_ops.add(5, 3, password="secret")  # This will be logged with "***" for the password
-# math_ops.multiply(5, 3)  # This will be logged normally
-
-# Example usage with modified class_log_decorator
-# @class_log_decorator(exclude=['multiply'])
-# class MathOperations:
-#     def add(self, x, y, password=None):
-#         # Function body
-#         return x + y
-#
-#     def multiply(self, x, y):
-#         # Function body
-#         return x * y
-# math_operations = MathOperations
-# math_operations.add(x=2,y=3)
-# math_operations.multiply(x=10,y=30)
-
-# Example usage with log_decorator
-# @log.class_log_decorator(exclude=["multiply"])
+# # Examples:
+# logger = setup_logger("my_app_logger", log_to_console=True)
+# logger.info("Application started")
+# logger.error("An error occurred")
+# logger.debug("Debugging info")
+# logger.warning("A warning message")
+# logger.critical("A critical error")

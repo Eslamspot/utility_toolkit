@@ -1,6 +1,6 @@
 ## Generate requirements.txt
 ```bash
-pipreqs .
+pipreqs . --force
 ```
 
 ## change version

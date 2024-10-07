@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import List
 from typing import Tuple, Optional
 
-import magic
 import requests
 from PIL import Image
 from bs4 import BeautifulSoup
@@ -278,11 +277,37 @@ def advanced_recognize_file_type(file_path):
     file_type = recognize_file_type('document.pdf')
     print(file_type)  # Output: application/pdf
     """
+    try:
+        import magic
+    except ImportError:
+        import platform
+        if platform.system() == 'Windows':
+            raise ImportError("Please install the 'libmagic' library using the command 'pip install python-magic-bin'.")
+        elif platform.system() == 'Linux':
+            raise ImportError("Please install the 'libmagic' library using the command 'apt-get install libmagic1'.")
+        elif platform.system() == 'Darwin':
+            raise ImportError("Please install the 'libmagic' library using the command 'brew install libmagic'.")
     return magic.from_file(file_path, mime=True)
 
 
 def recognize_file_type(data):
-    import magic
+    import platform
+    try:
+        import magic
+    except ImportError:
+        if platform.system() == 'Windows':
+            # pip install python-magic-bin
+            import subprocess
+            command = f'magick identify -format "%m" {data}'
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            output, error = process.communicate()
+            if error:
+                raise Exception(f"Error: {error}")
+            raise ImportError("Please install the 'libmagic' library using the command 'pip install python-magic-bin'.")
+        elif platform.system() == 'Linux':
+            raise ImportError("Please install the 'libmagic' library using the command 'apt-get install libmagic1'.")
+        elif platform.system() == 'Darwin':
+            raise ImportError("Please install the 'libmagic' library using the command 'brew install libmagic'.")
     # pipenv install python-magic
     import mimetypes
 
