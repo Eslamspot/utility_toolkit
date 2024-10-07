@@ -5,7 +5,7 @@
 
 ```bash
 docker pull sonarqube
-docker run -d --name sonarqubecontainer -p 9000:9000 -v ./data/sonarqube/conf:/opt/sonarqube/conf -v ./data/sonarqube/data:/opt/sonarqube/data -v ./data/sonarqube/logs:/opt/sonarqube/logs -v ./data/sonarqube/extensions:/opt/sonarqube/extensions sonarqube
+docker run -d --name sonarqube -p 9000:9000 -v ~/docker_data/sonarqube/conf:/opt/sonarqube/conf -v ~/docker_data/sonarqube/data:/opt/sonarqube/data -v ~/docker_data/sonarqube/logs:/opt/sonarqube/logs -v ~/docker_data/sonarqube/extensions:/opt/sonarqube/extensions sonarqube
 ```
 
 
