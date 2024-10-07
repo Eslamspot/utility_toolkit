@@ -77,6 +77,8 @@ git merge develop
 git tag -a v0.1.8 -m "release 0.1.8"
 git push origin v0.1.8
 git push origin release-0.1.8
+git push bitbucket v0.1.8
+git push bitbucket release-0.1.8
 ```
 
 
