@@ -122,6 +122,7 @@ clone this code to a new branch
 git tag -a v0.1.9 -m "release 0.1.9"
 git push origin v0.1.9
 git push origin release-0.1.9
+git commit -m "release 0.1.9"
 git push bitbucket v0.1.9
 git push bitbucket release-0.1.9
 ```
