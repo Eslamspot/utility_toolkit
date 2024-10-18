@@ -1,6 +1,0 @@
-projectKey=utility_toolkit
-serverUrl=http://127.0.0.1:9000
-serverVersion=10.7.0.96327
-dashboardUrl=http://127.0.0.1:9000/dashboard?id=utility_toolkit
-ceTaskId=50461874-ff16-4fd2-8bba-257dd319b3ad
-ceTaskUrl=http://127.0.0.1:9000/api/ce/task?id=50461874-ff16-4fd2-8bba-257dd319b3ad

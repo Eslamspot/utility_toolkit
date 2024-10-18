@@ -18,6 +18,11 @@ pip install utility_toolkit
 
 ## Changes and What's New
 
+- **Version 0.1.9** (Date: 2024-10-11)
+  - Improved logs.
+  - add more functions to global_tools.
+  - add sonarqube to the project.
+
 - **Version 0.1.8** (Date: 2024-10-04)
   - Improved error handling in PostgreSQL and SQLite handlers.
   - Introduced new utility functions for dynamodb handler.

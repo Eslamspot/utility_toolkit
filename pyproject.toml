@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "utility_toolkit"
-version = "0.1.8"
+version = "0.1.9"
 description = "A comprehensive toolkit for AWS operations, database handling, and general utilities."
 readme = "README.md"
 authors = [{ name = "Eslam Hasanen", email = "Eslamspot@gmail.com" }]
@@ -25,11 +25,11 @@ dependencies = [
     "boto3==1.35.27",
     "botocore==1.35.27",
     "chardet==5.2.0",
-    "cryptography==43.0.1",
+    "cryptography==43.0.3",
     "lxml==5.3.0",
     "pandas==2.2.3",
     "pdfkit==1.0.0",
-    "Pillow==10.4.0",
+    "Pillow==11.0.0",
     "psutil==6.0.0",
     "psycopg2==2.9.9",
     "pytest==8.3.3",

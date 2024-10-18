@@ -5,7 +5,7 @@
 
 ```bash
 docker pull sonarqube
-docker run -d --name sonarqubecontainer -p 9000:9000 -v ./data/sonarqube/conf:/opt/sonarqube/conf -v ./data/sonarqube/data:/opt/sonarqube/data -v ./data/sonarqube/logs:/opt/sonarqube/logs -v ./data/sonarqube/extensions:/opt/sonarqube/extensions sonarqube
+docker run -d --name sonarqube -p 9000:9000 -v ~/docker_data/sonarqube/conf:/opt/sonarqube/conf -v ~/docker_data/sonarqube/data:/opt/sonarqube/data -v ~/docker_data/sonarqube/logs:/opt/sonarqube/logs -v ~/docker_data/sonarqube/extensions:/opt/sonarqube/extensions sonarqube
 ```
 
 
@@ -74,10 +74,9 @@ python -m build
 twine upload dist/* --skip-existing
 ```
 
-## create version
-Ensure you're on the branch you want to update:
+## create version and take changes from develop branch
 ```bash
-git checkout new_branch_name
+git checkout -b release-0.1.9
 ```
 
 Fetch the latest changes from the remote repository:
@@ -85,12 +84,7 @@ Fetch the latest changes from the remote repository:
 git fetch origin
 ```
 
-Create a new branch to work on:
-```bash
-git checkout -b feature_branch_name origin/main
-```
-
-Merge the changes from the other branch (e.g., develop) into your current branch:
+Merge the changes from the other branch (e.g., develop) into your current branch if needed:
 ```bash
 git merge develop
 ```
@@ -125,13 +119,11 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git checkout -b release-0.1.8 
-git merge develop
-git tag -a v0.1.8 -m "release 0.1.8"
-git push origin v0.1.8
-git push origin release-0.1.8
-git push bitbucket v0.1.8
-git push bitbucket release-0.1.8
+git tag -a v0.1.9 -m "release 0.1.9"
+git push origin v0.1.9
+git push origin release-0.1.9
+git push bitbucket v0.1.9
+git push bitbucket release-0.1.9
 ```
 
 
