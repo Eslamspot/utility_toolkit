@@ -18,6 +18,9 @@ pip install utility_toolkit
 
 ## Changes and What's New
 
+- **Version 0.2.1** (Date: 2024-10-21)
+  - Fix import issue.
+
 - **Version 0.2.0** (Date: 2024-10-21)
   - Remove log decoration to let user log as needed.
 
