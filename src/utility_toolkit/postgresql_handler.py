@@ -2,17 +2,6 @@ import csv
 import itertools
 import logging
 
-# install required packages if user imports this module
-import subprocess
-import sys
-
-subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2==2.9.10"])
-
-import psycopg2
-from psycopg2 import pool
-from psycopg2 import sql
-from psycopg2.extras import RealDictCursor
-
 
 class PostgreSQLHandler:
     """
@@ -96,11 +85,18 @@ class PostgreSQLHandler:
     """
 
     def __init__(self, config):
+        # install required packages if user imports this module
+        import subprocess
+        import sys
+
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2==2.9.10"])
+
         self.config = config
         self.conn_pool = None
         self.logger = logging.getLogger(__name__)
 
     def connect(self):
+        import psycopg2
         self.conn_pool = psycopg2.pool.SimpleConnectionPool(1, 200, **self.config)
 
     def get_connection(self):
@@ -116,6 +112,7 @@ class PostgreSQLHandler:
             self.conn_pool.closeall()
 
     def execute_query(self, query, params=None):
+        from psycopg2.extras import RealDictCursor
         conn = self.get_connection()
         with conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(query, params)
@@ -140,10 +137,12 @@ class PostgreSQLHandler:
         self.release_connection(conn)
 
     def create_schema(self, schema_name):
+        from psycopg2 import sql
         query = sql.SQL("CREATE SCHEMA IF NOT EXISTS {}").format(sql.Identifier(schema_name))
         self.execute_query(query)
 
     def drop_schema(self, schema_name):
+        from psycopg2 import sql
         query = sql.SQL("DROP SCHEMA IF EXISTS {} CASCADE").format(sql.Identifier(schema_name))
         self.execute_query(query)
 
@@ -151,6 +150,7 @@ class PostgreSQLHandler:
         return self.execute_query(query, params)
 
     def fetch_one(self, query, params=None):
+        from psycopg2.extras import RealDictCursor
         with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(query, params)
             return cur.fetchone()
@@ -180,6 +180,7 @@ class PostgreSQLHandler:
         self.execute_query(query)
 
     def fetch_in_chunks(self, query, params=None, chunk_size=1000):
+        from psycopg2.extras import RealDictCursor
         with self.conn.cursor(cursor_factory=RealDictCursor) as cur:
             cur.execute(query, params)
             while True:

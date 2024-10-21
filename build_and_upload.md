@@ -75,7 +75,7 @@ twine upload dist/* --skip-existing
 
 ## create version and take changes from develop branch
 ```bash
-git checkout -b release-0.2.0
+git checkout -b release-0.2.1
 ```
 
 Fetch the latest changes from the remote repository:
@@ -118,20 +118,20 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git tag -a v0.2.0 -m "release 0.2.0"
-git push origin v0.2.0
-git push origin release-0.2.0
-git commit -m "release 0.2.0"
-git push bitbucket v0.2.0
-git push origin release-0.2.0
-git push bitbucket release-0.2.0
+git tag -a v0.2.1 -m "release 0.2.1"
+git push origin v0.2.1
+git push origin release-0.2.1
+git commit -m "release 0.2.1"
+git push bitbucket v0.2.1
+git push origin release-0.2.1
+git push bitbucket release-0.2.1
 ```
 
 
 
 ## install from bitbucket
 ```bash
-pip install git+https://bitbucket.org/username/reponame.git@branchname
+pip install git+https://bitbucket.org/username/utility-toolkit.git@branchname
 ```
 
 ## install using ssh
