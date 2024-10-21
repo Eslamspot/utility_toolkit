@@ -1,5 +1,5 @@
-from typing import List, Dict, Any, Optional
 import json
+from typing import List, Dict, Any, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -10,7 +10,6 @@ except ImportError:
     import log
 
 
-@log.class_log_decorator()
 class SQSHandler:
     def __init__(self, queue_url: str, region_name: str = 'us-east-2', user_profile: str = None):
         """
@@ -27,7 +26,8 @@ class SQSHandler:
         self.sqs = boto3.client('sqs', region_name=region_name)
         self.logger = log.setup_logger(__name__, log_to_console=True)
 
-    def send_message(self, message_body: str or dict, message_attributes: Optional[Dict[str, Dict[str, str]]] = None) -> Dict[
+    def send_message(self, message_body: str or dict, message_attributes: Optional[Dict[str, Dict[str, str]]] = None) -> \
+    Dict[
         str, Any]:
         """
         Send a message to the SQS queue.

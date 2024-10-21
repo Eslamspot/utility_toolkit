@@ -9,14 +9,12 @@ import boto3
 import chardet
 from botocore.exceptions import ClientError
 
-from . import log
-
 
 # You might need to set up AWS credentials or use a credentials file
 # boto3.setup_default_session(profile_name='your_profile_name')
 
-@log.log_decorator()
-def create_s3_bucket(bucket_name: str, region: str = 'us-east-1') -> bool:
+
+def create_s3_bucket(bucket_name: str, region: str = 'us-east-2') -> bool:
     """
     Create an S3 bucket in a specified region.
 
@@ -42,7 +40,6 @@ def create_s3_bucket(bucket_name: str, region: str = 'us-east-1') -> bool:
     return True
 
 
-@log.log_decorator()
 def upload_file_to_s3(file_path: str or Path, bucket_name: str, object_name: str = None) -> bool:
     """
     Upload a file to an S3 bucket.
@@ -72,7 +69,6 @@ def upload_file_to_s3(file_path: str or Path, bucket_name: str, object_name: str
     return True
 
 
-@log.log_decorator()
 def download_file_from_s3(bucket_name: str, object_name: str, file_path: str or Path) -> bool:
     """
     Download a file from an S3 bucket.
@@ -99,7 +95,6 @@ def download_file_from_s3(bucket_name: str, object_name: str, file_path: str or 
     return True
 
 
-@log.log_decorator()
 def list_s3_buckets() -> list:
     """
     List all S3 buckets for the authenticated account.
@@ -121,7 +116,6 @@ def list_s3_buckets() -> list:
         return []
 
 
-@log.log_decorator()
 def create_dynamodb_table(table_name: str, key_schema: list, attribute_definitions: list,
                           provisioned_throughput: dict) -> bool:
     """
@@ -158,7 +152,6 @@ def create_dynamodb_table(table_name: str, key_schema: list, attribute_definitio
     return True
 
 
-@log.log_decorator()
 def send_sqs_message(queue_url: str, message_body: str) -> bool:
     """
     Send a message to an SQS queue.
@@ -184,7 +177,6 @@ def send_sqs_message(queue_url: str, message_body: str) -> bool:
     return True
 
 
-@log.log_decorator()
 def invoke_lambda_function(function_name: str, payload: dict) -> dict:
     """
     Invoke an AWS Lambda function.
@@ -213,7 +205,6 @@ def invoke_lambda_function(function_name: str, payload: dict) -> dict:
         return {}
 
 
-@log.log_decorator()
 def create_ec2_instance(image_id: str, instance_type: str, key_name: str, security_group_ids: list) -> dict:
     """
     Create an EC2 instance.
@@ -247,7 +238,6 @@ def create_ec2_instance(image_id: str, instance_type: str, key_name: str, securi
         return {}
 
 
-@log.log_decorator()
 def create_rds_instance(db_instance_identifier: str, db_engine: str, db_engine_version: str,
                         db_instance_class: str, master_username: str, master_password: str,
                         allocated_storage: int) -> dict:
@@ -288,7 +278,6 @@ def create_rds_instance(db_instance_identifier: str, db_engine: str, db_engine_v
         return {}
 
 
-@log.log_decorator()
 def create_cloudformation_stack(stack_name: str, template_body: str, parameters: list = None) -> str:
     """
     Create a CloudFormation stack.
@@ -320,7 +309,6 @@ def create_cloudformation_stack(stack_name: str, template_body: str, parameters:
         return ""
 
 
-@log.log_decorator()
 def publish_sns_message(topic_arn: str, message: str, subject: str = None) -> str:
     """
     Publish a message to an SNS topic.
@@ -350,7 +338,6 @@ def publish_sns_message(topic_arn: str, message: str, subject: str = None) -> st
         return ""
 
 
-@log.log_decorator()
 def put_cloudwatch_metric(namespace: str, metric_name: str, dimensions: list, value: float, unit: str) -> bool:
     """
     Put a single data point in a CloudWatch metric.
@@ -390,7 +377,6 @@ def put_cloudwatch_metric(namespace: str, metric_name: str, dimensions: list, va
         return False
 
 
-@log.log_decorator()
 def create_iam_user(username: str, path: str = '/') -> dict:
     """
     Create a new IAM user.
@@ -418,7 +404,6 @@ def create_iam_user(username: str, path: str = '/') -> dict:
         return {}
 
 
-@log.log_decorator()
 def create_vpc(cidr_block: str) -> dict:
     """
     Create a new VPC.
@@ -444,7 +429,6 @@ def create_vpc(cidr_block: str) -> dict:
         return {}
 
 
-@log.log_decorator()
 def create_ecs_cluster(cluster_name: str) -> str:
     """
     Create a new ECS cluster.
@@ -470,7 +454,6 @@ def create_ecs_cluster(cluster_name: str) -> str:
         return ""
 
 
-@log.log_decorator()
 def create_elastic_beanstalk_application(application_name: str, description: str = '') -> dict:
     """
     Create a new Elastic Beanstalk application.
@@ -498,7 +481,6 @@ def create_elastic_beanstalk_application(application_name: str, description: str
         return {}
 
 
-@log.log_decorator()
 def create_route53_hosted_zone(domain_name: str, comment: str = '') -> dict:
     """
     Create a new Route 53 hosted zone.
@@ -529,7 +511,6 @@ def create_route53_hosted_zone(domain_name: str, comment: str = '') -> dict:
         return {}
 
 
-@log.log_decorator()
 def get_s3_file_content(s3_path: str, is_binary: bool = False, encoding: str = 'utf-8') -> typing.Union[str, bytes]:
     """
     Get the content of a file stored in an S3 bucket using an S3 path.
@@ -583,7 +564,6 @@ def get_s3_file_content(s3_path: str, is_binary: bool = False, encoding: str = '
         raise e
 
 
-@log.log_decorator()
 def get_s3_file_content(s3_path: str) -> Union[str, bytes]:
     """
     Get the content of a file stored in an S3 bucket using an S3 path.

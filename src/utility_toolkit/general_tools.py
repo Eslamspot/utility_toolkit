@@ -87,7 +87,6 @@ def timeout(seconds):
     return decorator
 
 
-@log.log_decorator()
 def write_list_to_csv_file(data: list, filename: str or Path) -> None:
     """
     Write a list of lists to a CSV file.
@@ -108,7 +107,6 @@ def write_list_to_csv_file(data: list, filename: str or Path) -> None:
         writer.writerows(data)
 
 
-@log.log_decorator()
 def write_list_to_text_file(list_to_write: list, file_path: str or Path) -> None:
     """
     Write a list to a text file.
@@ -129,7 +127,6 @@ def write_list_to_text_file(list_to_write: list, file_path: str or Path) -> None
             file.write(f'{item}\n')
 
 
-@log.log_decorator()
 def write_to_file(file_path: str or Path, data: str) -> None:
     """
     Write data to a file.
@@ -148,7 +145,6 @@ def write_to_file(file_path: str or Path, data: str) -> None:
         file.write(data)
 
 
-@log.log_decorator()
 def write_dict_to_text_file(dictionary: dict or list, file_path: str or Path) -> None:
     """
     Save a dictionary or list to a text file in JSON format.
@@ -169,13 +165,11 @@ def write_dict_to_text_file(dictionary: dict or list, file_path: str or Path) ->
         json.dump(dictionary, f, indent=4)
 
 
-@log.log_decorator()
 def sort_dict_by_value(d: dict):
     from collections import OrderedDict
     return dict(OrderedDict(sorted(d.items(), key=lambda x: x[1], reverse=True)))
 
 
-@log.log_decorator()
 def read_file(file_path: str or Path) -> list[list[str]]:
     """
     Read the content of a file.
@@ -201,7 +195,6 @@ def read_file(file_path: str or Path) -> list[list[str]]:
             return file.read()
 
 
-@log.log_decorator()
 def stream_big_file(file_path: str or Path, chunk_size: int = 1024) -> bytes:
     """
     Stream a large file in chunks without splitting lines.
@@ -233,7 +226,6 @@ def stream_big_file(file_path: str or Path, chunk_size: int = 1024) -> bytes:
                 buffer = lines[-1]
 
 
-@log.log_decorator()
 def read_dict_from_text_file(file_path: str or Path) -> dict or list:
     """
     Load a dictionary or list from a text file in JSON format.
@@ -253,7 +245,6 @@ def read_dict_from_text_file(file_path: str or Path) -> dict or list:
         return json.load(f)
 
 
-@log.log_decorator()
 def dict_to_csv(data: list, filename: str or Path) -> None:
     """
     Convert a list of dictionaries to a CSV file.
@@ -275,7 +266,6 @@ def dict_to_csv(data: list, filename: str or Path) -> None:
         writer.writerows(data)
 
 
-@log.log_decorator()
 def advanced_recognize_file_type(file_path):
     """
     Recognize the MIME type of a file using the magic package.
@@ -285,6 +275,9 @@ def advanced_recognize_file_type(file_path):
     print(file_type)  # Output: application/pdf
     """
     try:
+        import subprocess
+        import sys
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "python_magic==0.4.27"])
         import magic
     except ImportError:
         import platform
@@ -360,7 +353,6 @@ def recognize_file_type(data):
     return mime_type, file_extension
 
 
-@log.log_decorator()
 def stream_to_file(stream: io.IOBase, filename: str or Path) -> None:
     """
     Stream data to a file.
@@ -381,7 +373,6 @@ def stream_to_file(stream: io.IOBase, filename: str or Path) -> None:
             file.write(chunk)
 
 
-@log.log_decorator()
 def string_to_pdf(file_path: str or Path, data: str) -> None:
     """
     Convert a string to a PDF file.
@@ -454,7 +445,6 @@ def string_to_pdf(file_path: str or Path, data: str) -> None:
     c.save()
 
 
-@log.log_decorator()
 def bytes_to_file(data: bytes, filename: str or Path) -> None:
     """
     Save bytes to a file.
@@ -474,7 +464,6 @@ def bytes_to_file(data: bytes, filename: str or Path) -> None:
         file.write(data)
 
 
-@log.log_decorator()
 def json_to_pdf(json_data: dict, filename: str or Path) -> None:
     """
     Convert JSON data to a PDF file.
@@ -494,7 +483,6 @@ def json_to_pdf(json_data: dict, filename: str or Path) -> None:
     string_to_pdf(filename, text)
 
 
-@log.log_decorator()
 def clean_html(html_content: str) -> str:
     """
     Clean up HTML content by removing unnecessary whitespace, converting HTML entities,
@@ -550,7 +538,6 @@ def clean_html(html_content: str) -> str:
     return cleaned_html.strip()
 
 
-@log.log_decorator()
 def html_to_pdf(html_content: str, filename: str or Path) -> None:
     """
     Convert HTML content to a PDF file.
@@ -572,7 +559,6 @@ def html_to_pdf(html_content: str, filename: str or Path) -> None:
     string_to_pdf(filename, text)
 
 
-@log.log_decorator()
 def advanced_html_to_pdf(html_code: str, new_file_path: str or Path) -> None:
     import pdfkit
     options = {
@@ -596,7 +582,6 @@ def advanced_html_to_pdf(html_code: str, new_file_path: str or Path) -> None:
         raise Exception(f"Fail to convert html to pdf")
 
 
-@log.log_decorator()
 def xml_to_pdf(xml_content: str, file_path: str or Path, xslt_doc_path: str or Path = None) -> None:
     """
     Convert XML content to a PDF file.
@@ -644,7 +629,6 @@ def xml_to_pdf(xml_content: str, file_path: str or Path, xslt_doc_path: str or P
     html_to_pdf(html_content=html_code, filename=file_path)
 
 
-@log.log_decorator()
 def combine_images_to_pdf(image_paths: list, output_filename: str or Path) -> None:
     """
     Combine multiple images into a single PDF file.
@@ -664,7 +648,6 @@ def combine_images_to_pdf(image_paths: list, output_filename: str or Path) -> No
     images[0].save(output_filename, save_all=True, append_images=images[1:])
 
 
-@log.log_decorator()
 def advanced_combine_images_to_pdf(image_files: List[str], output_file: str):
     from PIL import Image
     from reportlab.pdfgen import canvas
@@ -697,7 +680,6 @@ def advanced_combine_images_to_pdf(image_files: List[str], output_file: str):
     c.save()
 
 
-@log.log_decorator()
 def call_api_with_file(api_url: str, file_path: Path, output_file_path: Path, additional_data: dict = None) -> None:
     """
     Calls an API with the ability to send and receive files.
@@ -739,7 +721,6 @@ def call_api_with_file(api_url: str, file_path: Path, output_file_path: Path, ad
         files['file'].close()
 
 
-@log.log_decorator()
 def create_directory_if_not_exists(directory: str or Path) -> None:
     """
     Create a directory if it doesn't exist.
@@ -756,7 +737,6 @@ def create_directory_if_not_exists(directory: str or Path) -> None:
     Path(directory).mkdir(parents=True, exist_ok=True)
 
 
-@log.log_decorator()
 def get_file_size(file_path: str or Path) -> int:
     """
     Get the size of a file in bytes.
@@ -774,7 +754,6 @@ def get_file_size(file_path: str or Path) -> int:
     return Path(file_path).stat().st_size
 
 
-@log.log_decorator()
 def rename_file(old_name: str or Path, new_name: str or Path) -> None:
     """
     Rename a file.
@@ -792,7 +771,6 @@ def rename_file(old_name: str or Path, new_name: str or Path) -> None:
     Path(old_name).rename(new_name)
 
 
-@log.log_decorator()
 def list_files_in_directory(directory: str or Path) -> list:
     """
     List all files in a directory.
@@ -811,7 +789,6 @@ def list_files_in_directory(directory: str or Path) -> list:
     return list(Path(directory).rglob('*.*'))
 
 
-@log.log_decorator()
 def gz_compress_file(file_path: str or Path, output_path: str or Path) -> None:
     """
     GZ Compress a file using gzip.
@@ -831,7 +808,6 @@ def gz_compress_file(file_path: str or Path, output_path: str or Path) -> None:
             f_out.writelines(f_in)
 
 
-@log.log_decorator()
 def gz_it(file_paths: List[str or Path], output_path: str or Path, delete_original_files=False) -> str or Path:
     """
     GZ Compress multiple files and directories.
@@ -859,7 +835,6 @@ def gz_it(file_paths: List[str or Path], output_path: str or Path, delete_origin
     return output_path
 
 
-@log.log_decorator()
 def gz_decompress_file(file_path: str or Path, output_path: str or Path) -> None:
     """
     GZ Decompress a gzip file.
@@ -879,7 +854,6 @@ def gz_decompress_file(file_path: str or Path, output_path: str or Path) -> None
             f_out.writelines(f_in)
 
 
-@log.log_decorator()
 def zip_it(file_paths: List[str or Path], output_path: str or Path, delete_original_files=False) -> str or Path:
     """
     Zip compress multiple files and directories.
@@ -911,7 +885,6 @@ def zip_it(file_paths: List[str or Path], output_path: str or Path, delete_origi
     return output_path
 
 
-@log.log_decorator()
 def zip_compress_files(file_paths: List[str or Path], output_path: str or Path,
                        delete_original_files=False) -> str or Path:
     """
@@ -939,7 +912,6 @@ def zip_compress_files(file_paths: List[str or Path], output_path: str or Path,
     return output_path
 
 
-@log.log_decorator()
 def zip_decompress_file(file_path: str or Path, output_path: str or Path) -> str or Path:
     """
     Zip decompress a file.
@@ -960,7 +932,6 @@ def zip_decompress_file(file_path: str or Path, output_path: str or Path) -> str
     return output_path
 
 
-@log.log_decorator()
 def encrypt_file(file_path: str or Path, key: bytes, output_path: str or Path) -> None:
     """
     Encrypt a file using Fernet encryption.
@@ -985,7 +956,6 @@ def encrypt_file(file_path: str or Path, key: bytes, output_path: str or Path) -
         encrypted_file.write(encrypted)
 
 
-@log.log_decorator()
 def decrypt_file(file_path: str or Path, key: bytes, output_path: str or Path) -> None:
     """
     Decrypt a Fernet-encrypted file.
@@ -1009,7 +979,6 @@ def decrypt_file(file_path: str or Path, key: bytes, output_path: str or Path) -
         dec_file.write(decrypted)
 
 
-@log.log_decorator()
 def calculate_md5(file_path: str or Path) -> str:
     """
     Calculate the MD5 hash of a file.
@@ -1033,7 +1002,6 @@ def calculate_md5(file_path: str or Path) -> str:
     return file_hash.hexdigest()
 
 
-@log.log_decorator()
 def download_file(url: str, filename: str or Path) -> None:
     """
     Download a file from a given URL.
@@ -1053,7 +1021,6 @@ def download_file(url: str, filename: str or Path) -> None:
         file.write(response.content)
 
 
-@log.log_decorator()
 def extract_zip(zip_path: str or Path, extract_to: str or Path) -> None:
     """
     Extract contents of a zip file.
@@ -1072,7 +1039,6 @@ def extract_zip(zip_path: str or Path, extract_to: str or Path) -> None:
         zip_ref.extractall(extract_to)
 
 
-@log.log_decorator()
 def create_zip(zip_filename: str or Path, files_to_zip: list) -> None:
     """
     Create a zip file from given files.
@@ -1093,7 +1059,6 @@ def create_zip(zip_filename: str or Path, files_to_zip: list) -> None:
             zipf.write(file, Path(file).name)
 
 
-@log.log_decorator()
 def copy_file(src: str or Path, dst: str or Path) -> None:
     """
     Copy a file from source to destination.
@@ -1111,7 +1076,6 @@ def copy_file(src: str or Path, dst: str or Path) -> None:
     shutil.copy2(src, dst)
 
 
-@log.log_decorator()
 def move_file(src: str or Path, dst: str or Path) -> None:
     """
     Move a file from source to destination.
@@ -1129,7 +1093,6 @@ def move_file(src: str or Path, dst: str or Path) -> None:
     shutil.move(src, dst)
 
 
-@log.log_decorator()
 def get_file_creation_time(file_path: str or Path) -> datetime.datetime:
     """
     Get the creation time of a file.
@@ -1147,7 +1110,6 @@ def get_file_creation_time(file_path: str or Path) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(Path(file_path).stat().st_ctime)
 
 
-@log.log_decorator()
 def get_file_modification_time(file_path: str or Path) -> datetime.datetime:
     """
     Get the last modification time of a file.
@@ -1165,7 +1127,6 @@ def get_file_modification_time(file_path: str or Path) -> datetime.datetime:
     return datetime.datetime.fromtimestamp(Path(file_path).stat().st_mtime)
 
 
-@log.log_decorator()
 def search_file_content(file_path: str or Path, pattern: str) -> list:
     """
     Search for a regex pattern in a file and return matching lines.
@@ -1186,7 +1147,6 @@ def search_file_content(file_path: str or Path, pattern: str) -> list:
         return [line for line in file if re.search(pattern, line)]
 
 
-@log.log_decorator()
 def count_lines_in_file(file_path: str or Path) -> int:
     """
     Count the number of lines in a file.
@@ -1205,7 +1165,6 @@ def count_lines_in_file(file_path: str or Path) -> int:
         return sum(1 for _ in file)
 
 
-@log.log_decorator()
 def merge_text_files(file_paths: list, output_file: str or Path) -> None:
     """
     Merge multiple text files into a single file.
@@ -1228,7 +1187,6 @@ def merge_text_files(file_paths: list, output_file: str or Path) -> None:
             outfile.write('\n')
 
 
-@log.log_decorator()
 def sanitize_filename(filename: str) -> str:
     import re
     """
@@ -1304,7 +1262,6 @@ def write_to_csv(data: list[dict[str, any]], file_path: Path, field_names: list[
         print(f"Error writing to CSV file: {e}")
 
 
-@log.log_decorator()
 def run_cli_command(command: str, shell: bool = False, timeout: Optional[int] = None) -> Tuple[int, str, str]:
     """
     Run a CLI command on Windows, macOS, or Linux.
@@ -1367,7 +1324,6 @@ def run_cli_command(command: str, shell: bool = False, timeout: Optional[int] = 
         return 1, "", f"An unexpected error occurred: {str(e)}"
 
 
-@log.log_decorator()
 def random_string(length: int = 8) -> str:
     import random
     import string
@@ -1375,7 +1331,7 @@ def random_string(length: int = 8) -> str:
 
 
 # calculate string size by kb
-@log.log_decorator()
+
 def calculate_string_size_kb(string: str) -> float:
     """
     Calculate the size of a string in kilobytes (KB).
@@ -1394,7 +1350,7 @@ def calculate_string_size_kb(string: str) -> float:
 
 
 # generate random number between 2 numbers with step size and decimal points as options
-@log.log_decorator()
+
 def random_number(start: int, end: int, step: float = 1, decimal_points: int = 0) -> float or int:
     """
     Generate a random number within a specified range with a given step size and decimal points.
@@ -1419,7 +1375,6 @@ def random_number(start: int, end: int, step: float = 1, decimal_points: int = 0
     return round(random.uniform(start, end) / step) * step
 
 
-@log.log_decorator()
 def bytes_to_string(data: bytes) -> str:
     """
     Convert bytes to a string.
@@ -1438,7 +1393,6 @@ def bytes_to_string(data: bytes) -> str:
     return data.decode('utf-8')
 
 
-@log.log_decorator(secrets=['email_password', 'body_html'])
 def send_email(subject: str, body_html: str, smtp_server: str, to_email: str, email_password: str, from_email: str,
                attachments: list = None):
     msg = MIMEMultipart()
