@@ -428,3 +428,4 @@ fabric.properties
 .idea/
 local_test*
 /.scannerwork/
+outputs/

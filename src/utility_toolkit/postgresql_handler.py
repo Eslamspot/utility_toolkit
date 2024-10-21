@@ -2,15 +2,18 @@ import csv
 import itertools
 import logging
 
+# install required packages if user imports this module
+import subprocess
+import sys
+
+subprocess.check_call([sys.executable, "-m", "pip", "install", "psycopg2==2.9.10"])
+
 import psycopg2
 from psycopg2 import pool
 from psycopg2 import sql
 from psycopg2.extras import RealDictCursor
 
-from . import log
 
-
-@log.class_log_decorator(exclude=["fetch_all", "execute_query"])
 class PostgreSQLHandler:
     """
     A class used to interact with a PostgreSQL database.
@@ -202,66 +205,3 @@ class PostgreSQLHandler:
             params = [tuple(item.values()) for item in data]
             with self.conn.cursor() as cur:
                 cur.executemany(query, params)
-
-
-if __name__ == "__main__":
-    from dotenv import load_dotenv
-    import os
-
-    load_dotenv(".env")
-
-    query_unique_id = """
-    select *
-    from "qcpr_arf_AU"."MultimediaHfsLineNumber" a
-    where "MultimediaHfsID"::int = 24599;
-    """
-
-    db_config = {
-        'dbname': os.getenv('DB_DATABASE'),
-        'user': os.getenv('DB_USER'),
-        'password': os.getenv('DB_PASSWORD'),
-        'host': os.getenv('DB_HOST'),
-        'port': os.getenv('DB_PORT', 5432)
-    }
-
-    db = PostgreSQLHandler(db_config)
-    db.connect()
-    payload = db.fetch_all(query_unique_id)
-    log.logging.info(f"payload count: {len(payload)}")
-    db.disconnect()
-
-    # connect to the database using pands
-    import pandas as pd
-
-    # Create a new instance of the PostgresSQL handler
-    db = PostgreSQLHandler(db_config)
-
-    # Connect to the database
-    db.connect()
-
-    query = f""" SELECT "SourceS3FileName", "DestinationFileName" FROM dbo.all_data_0365;"""
-
-    df = pd.read_sql(query, db.get_connection())
-
-    # Release the connection
-    db.release_connection(db.get_connection())
-
-    # better way to connect to the database
-    # pipenv install sqlalchemy
-    from sqlalchemy import create_engine
-
-    # Create a new instance of the PostgresSQL handler
-    db = PostgreSQLHandler(db_config)
-
-    # Connect to the database
-    db.connect()
-
-    # Create an SQLAlchemy engine using the connection
-    engine = create_engine(db.get_connection().dsn)
-
-    query = f""" SELECT "SourceS3FileName", "DestinationFileName" FROM dbo.all_data_0365;"""
-
-    df = pd.read_sql(query, engine)
-
-    # Release the connection
-    db.release_connection(db.get_connection())

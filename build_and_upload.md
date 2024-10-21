@@ -57,9 +57,8 @@ pipreqs . --force
 ```
 
 ## change version
-```bash
 go to pyproject.toml& scr/utility_toolkit/__init__.py and update the version
-```
+
 
 ## update version and requirements in pyproject.toml
 open file pyproject.toml and update requirements ad in requirements.txt and update version
@@ -76,7 +75,7 @@ twine upload dist/* --skip-existing
 
 ## create version and take changes from develop branch
 ```bash
-git checkout -b release-0.1.9
+git checkout -b release-0.2.0
 ```
 
 Fetch the latest changes from the remote repository:
@@ -119,13 +118,13 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git tag -a v0.1.9 -m "release 0.1.9"
-git push origin v0.1.9
-git push origin release-0.1.9
-git commit -m "release 0.1.9"
-git push bitbucket v0.1.9
-git push origin release-0.1.9
-git push bitbucket release-0.1.9
+git tag -a v0.2.0 -m "release 0.2.0"
+git push origin v0.2.0
+git push origin release-0.2.0
+git commit -m "release 0.2.0"
+git push bitbucket v0.2.0
+git push origin release-0.2.0
+git push bitbucket release-0.2.0
 ```
 
 

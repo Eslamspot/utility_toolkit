@@ -7,12 +7,6 @@ from pathlib import Path
 from typing import List, Dict, Union
 
 
-from . import log
-
-
-
-@log.class_log_decorator(
-    exclude=["_insert_chunk", "_read_csv_in_chunks", "_read_txt_in_chunks", "execute_custom_query"])
 class DatabaseHandler:
     """
     A class to handle database operations for a SQLite database.

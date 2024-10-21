@@ -1,10 +1,10 @@
 import logging
+import time
 from typing import Dict, List, Any, Optional
 
 import boto3
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
-import time
 
 try:
     from . import log
@@ -16,7 +16,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-@log.class_log_decorator()
 class DynamoDBHandler:
     """
     A handler class for interacting with Amazon DynamoDB.
@@ -289,7 +288,6 @@ class DynamoDBHandler:
         except ClientError as e:
             logger.error(f"Error querying items with pagination: {e}")
             return {'Items': [], 'LastEvaluatedKey': None}
-
 
     def scan_items(self, filter_expression: Optional[Attr] = None, index_name: Optional[str] = None) -> List[
         Dict[str, Any]]:
@@ -838,4 +836,3 @@ class DynamoDBHandler:
         except ClientError as e:
             logger.error(f"Error updating table: {e}")
             return False
-
