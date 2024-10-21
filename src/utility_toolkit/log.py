@@ -109,13 +109,15 @@ logging.basicConfig(
 )
 
 
-def log_decorator(secrets=None):
+def log_decorator(secrets=None, mask_indices=None, max_length=None):
     """
       A decorator that logs function calls, their arguments, and performance metrics.
 
       Args:
           secrets (list, optional): A list of argument names to be masked in the logs.
                                     Defaults to the predefined secret_items list.
+        mask_indices (list, optional): A list of indices to be masked in tuples. Defaults to None.
+        max_length (int, optional): Maximum length for truncation. Defaults to None.
 
       Returns:
           function: The decorated function with logging functionality.
@@ -130,18 +132,26 @@ def log_decorator(secrets=None):
           # This will log something like:
           # {"function": "login", "args": ["user123"], "kwargs": {"password": "***"},
           #  "duration": "0.01", "cpu_usage": "0.5%", "memory_usage": "0.1%", "thread": "MainThread"}
+
+          if inputs not dict you can user mask_indices=[1, 4] to mask the second and fifth index
+          @log.log_decorator(mask_indices=[0, 1])
+          def login(username, password):
       """
     if not secrets:
         secrets = secret_items
+    else:
+        secrets = secret_items + secrets
 
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             logger = logging.getLogger(func.__module__)
 
-            # Mask secrets
-            masked_args = mask_secrets(args, secrets)
-            masked_kwargs = mask_secrets(kwargs, secrets)
+            # Mask secrets and truncate long values
+            masked_args = mask_secrets(args, secrets, mask_indices, max_length)
+            masked_kwargs = mask_secrets(kwargs, secrets, max_length=max_length)
+
+            logger.info(f"Calling {func.__name__} with args: {masked_args} and kwargs: {masked_kwargs}")
 
             start_time = time.time()
             start_process = psutil.Process()
@@ -179,16 +189,18 @@ def log_decorator(secrets=None):
     return decorator
 
 
-def mask_secrets(data, secrets):
+def mask_secrets(data, secrets, indices=None, max_length=None):
     """
   Recursively mask secret values in data structures.
 
   Args:
       data: The data structure to mask secrets in.
       secrets (list): A list of keys to be considered as secrets.
+      indices (list, optional): A list of indices to be masked in tuples. Defaults to None.
+      max_length (int, optional): Maximum length for truncation. Defaults to None.
 
   Returns:
-      The data structure with secrets masked.
+        The data structure with secrets masked and long values truncated.
 
   Example:
       data = {"username": "user123", "password": "secretpass", "nested": {"api_key": "12345"}}
@@ -196,12 +208,23 @@ def mask_secrets(data, secrets):
       print(masked_data)
       {'username': 'user123', 'password': '***', 'nested': {'api_key': '***'}}
   """
+
+    def truncate(value):
+        if max_length and isinstance(value, str) and len(value) > max_length:
+            return value[:max_length] + '...'
+        return value
+
     if isinstance(data, dict):
-        return {k: "***" if k in secrets else mask_secrets(v, secrets) for k, v in data.items()}
+        return {k: "***" if k in secrets or "password" in k.lower() else mask_secrets(v, secrets, max_length=max_length)
+                for k, v in data.items()}
     elif isinstance(data, (list, tuple)):
-        return type(data)(mask_secrets(v, secrets) for v in data)
+        if indices:
+            return type(data)(("***" if i in indices else mask_secrets(v, secrets, max_length=max_length)) for i, v in
+                              enumerate(data))
+        else:
+            return type(data)(mask_secrets(v, secrets, max_length=max_length) for v in data)
     else:
-        return data
+        return truncate(data)
 
 
 def class_log_decorator(exclude=None):
@@ -243,7 +266,7 @@ def class_log_decorator(exclude=None):
     return class_decorator
 
 
-def setup_logger(name, log_to_console, max_bytes=10 * 1024 * 1024, backup_count=5):
+def setup_logger(name: str, log_to_console: bool, max_bytes: int = 10 * 1024 * 1024, backup_count: int = 5):
     """
       Set up a logger with both file and optional console logging.
 

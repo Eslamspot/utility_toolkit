@@ -1,3 +1,5 @@
+import concurrent.futures
+import concurrent.futures
 import csv
 import datetime
 import gzip
@@ -9,8 +11,13 @@ import platform
 import re
 import shlex
 import shutil
+import smtplib
 import subprocess
 import zipfile
+from email import encoders
+from email.mime.base import MIMEBase
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from pathlib import Path
 from typing import List
 from typing import Tuple, Optional
@@ -1387,6 +1394,7 @@ def calculate_string_size_kb(string: str) -> float:
 
 
 # generate random number between 2 numbers with step size and decimal points as options
+@log.log_decorator()
 def random_number(start: int, end: int, step: float = 1, decimal_points: int = 0) -> float or int:
     """
     Generate a random number within a specified range with a given step size and decimal points.
@@ -1409,3 +1417,89 @@ def random_number(start: int, end: int, step: float = 1, decimal_points: int = 0
     """
     import random
     return round(random.uniform(start, end) / step) * step
+
+
+@log.log_decorator()
+def bytes_to_string(data: bytes) -> str:
+    """
+    Convert bytes to a string.
+
+    Args:
+        data (bytes): The byte data to be converted to a string.
+
+    Returns:
+        str: The string representation of the byte data.
+
+    Example:
+    data = b'Hello, World!'
+    text = bytes_to_string(data)
+    print(text)
+    """
+    return data.decode('utf-8')
+
+
+@log.log_decorator(secrets=['email_password', 'body_html'])
+def send_email(subject: str, body_html: str, smtp_server: str, to_email: str, email_password: str, from_email: str,
+               attachments: list = None):
+    msg = MIMEMultipart()
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Cc'] = ','
+    msg['Bcc'] = ','
+    msg['Subject'] = subject
+
+    # Attach the HTML body
+    msg.attach(MIMEText(body_html, 'html'))
+
+    if attachments:
+        for filepath in attachments:
+            # Assuming attachments is a list of file paths
+            part = MIMEBase('application', "octet-stream")
+            with open(filepath, 'rb') as file:
+                part.set_payload(file.read())
+            encoders.encode_base64(part)
+            part.add_header('Content-Disposition', 'attachment; filename="{}"'.format(filepath.name))
+            msg.attach(part)
+
+    # msg.attach(MIMEText(body_html, 'html'))
+    server = smtplib.SMTP(smtp_server, 587)
+    server.starttls()
+    server.login(from_email,
+                 email_password)
+    server.sendmail(from_email, to_email.split(',') + msg['Cc'].split(',') + msg['Bcc'].split(','), msg.as_string())
+    server.quit()
+
+
+# Function to send email asynchronously
+def send_email_async(subject: str, body_html: str, smtp_server: str, to_email: str, email_password: str,
+                     from_email: str,
+                     attachments: list = None):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        executor.submit(send_email, subject, body_html, smtp_server, to_email, email_password, from_email, attachments)
+
+
+def run_async(func, *args, **kwargs):
+    """
+    Run a function asynchronously using a ThreadPoolExecutor.
+
+    Args:
+        func (callable): The function to run asynchronously.
+        *args: Variable length argument list to pass to the function.
+        **kwargs: Arbitrary keyword arguments to pass to the function.
+
+    Returns:
+        concurrent.futures.Future: A Future object representing the execution of the function.
+
+    Example:
+        def sample_function(x, y):
+            [...]
+
+        future = run_async(sample_function, 5, 3)
+        result = future.result()  # This will block until the function completes
+        print(result)  # Output: 8
+    """
+    # Create a ThreadPoolExecutor, if we use with will block the main thread
+    executor = concurrent.futures.ThreadPoolExecutor()
+    future = executor.submit(func, *args, **kwargs)
+    executor.shutdown(wait=False)  # Don't wait for other futures to complete
+    return future
