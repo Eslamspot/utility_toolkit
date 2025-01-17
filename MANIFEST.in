@@ -1,1 +1,6 @@
 exclude src/utility_toolkit/local_test*
+// exclude .env everywhere
+exclude src/utility_toolkit/.env
+// exclude .git
+exclude src/utility_toolkit/.git
+

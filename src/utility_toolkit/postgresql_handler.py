@@ -19,6 +19,13 @@ class PostgreSQLHandler:
     connect():
         Establishes a connection to the PostgreSQL database.
         Example:
+            config = {
+                "host": os.getenv("DB_HOST"),
+                "port": os.getenv("DB_PORT"),
+                "database": os.getenv("DB_DATABASE"),
+                "user": os.getenv("DB_USER"),
+                "password": os.getenv("DB_PASSWORD")
+            }
             handler = PostgreSQLHandler(config)
             handler.connect()
 
@@ -96,7 +103,7 @@ class PostgreSQLHandler:
         self.logger = logging.getLogger(__name__)
 
     def connect(self):
-        import psycopg2
+        import psycopg2.pool
         self.conn_pool = psycopg2.pool.SimpleConnectionPool(1, 200, **self.config)
 
     def get_connection(self):

@@ -3,4 +3,4 @@ from .postgresql_handler import *
 from .sqlite_handler import *
 from .general_tools import *
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"

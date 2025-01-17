@@ -109,7 +109,7 @@ logging.basicConfig(
 )
 
 
-def log_decorator(secrets=None, mask_indices=None, max_length=None):
+def log_decorator(secrets=None, mask_indices=None, max_length=None, silent=False):
     """
       A decorator that logs function calls, their arguments, and performance metrics.
 
@@ -146,6 +146,8 @@ def log_decorator(secrets=None, mask_indices=None, max_length=None):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             logger = logging.getLogger(func.__module__)
+            if silent:
+                logger = silent_logger
 
             # Mask secrets and truncate long values
             masked_args = mask_secrets(args, secrets, mask_indices, max_length)
@@ -227,7 +229,7 @@ def mask_secrets(data, secrets, indices=None, max_length=None):
         return truncate(data)
 
 
-def class_log_decorator(exclude=None):
+def class_log_decorator(exclude=None, silent=False):
     """
       A decorator to apply logging to all methods of a class, except those specified.
 
@@ -260,7 +262,7 @@ def class_log_decorator(exclude=None):
     def class_decorator(cls):
         for name, method in cls.__dict__.items():
             if callable(method) and name not in exclude:
-                setattr(cls, name, log_decorator()(method))
+                setattr(cls, name, log_decorator(silent=silent)(method))
         return cls
 
     return class_decorator

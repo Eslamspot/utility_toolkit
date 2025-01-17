@@ -17,6 +17,7 @@ requests = "*"
 pdfkit = "*"
 cryptography = "*"
 psutil = "*"
+tqdm = "*"
 
 [dev-packages]
 pipreqs = "*"
