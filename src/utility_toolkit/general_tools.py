@@ -1,5 +1,4 @@
 import concurrent.futures
-import concurrent.futures
 import csv
 import datetime
 import gzip
@@ -21,16 +20,12 @@ from email.mime.text import MIMEText
 from pathlib import Path
 from typing import List
 from typing import Tuple, Optional
+from tqdm import tqdm
 
 import requests
 from PIL import Image
 from bs4 import BeautifulSoup
 from cryptography.fernet import Fernet
-
-try:
-    from . import log
-except ImportError:
-    import log
 
 
 # Function to add a timeout to a function
@@ -1394,12 +1389,12 @@ def bytes_to_string(data: bytes) -> str:
 
 
 def send_email(subject: str, body_html: str, smtp_server: str, to_email: str, email_password: str, from_email: str,
-               attachments: list = None):
+               attachments: list = None, cc_email: str = None, bcc_email: str = None, server_port: int = 587):
     msg = MIMEMultipart()
     msg['From'] = from_email
     msg['To'] = to_email
-    msg['Cc'] = ','
-    msg['Bcc'] = ','
+    msg['Cc'] = cc_email if cc_email else ','
+    msg['Bcc'] = bcc_email if bcc_email else ','
     msg['Subject'] = subject
 
     # Attach the HTML body
@@ -1416,7 +1411,7 @@ def send_email(subject: str, body_html: str, smtp_server: str, to_email: str, em
             msg.attach(part)
 
     # msg.attach(MIMEText(body_html, 'html'))
-    server = smtplib.SMTP(smtp_server, 587)
+    server = smtplib.SMTP(smtp_server, server_port)
     server.starttls()
     server.login(from_email,
                  email_password)
@@ -1426,10 +1421,11 @@ def send_email(subject: str, body_html: str, smtp_server: str, to_email: str, em
 
 # Function to send email asynchronously
 def send_email_async(subject: str, body_html: str, smtp_server: str, to_email: str, email_password: str,
-                     from_email: str,
-                     attachments: list = None):
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        executor.submit(send_email, subject, body_html, smtp_server, to_email, email_password, from_email, attachments)
+                     from_email: str, attachments: list = None, cc_email: str = None, bcc_email: str = None,
+                     server_port: int = 587):
+    executor = concurrent.futures.ThreadPoolExecutor()
+    executor.submit(send_email, subject, body_html, smtp_server, to_email, email_password, from_email,
+                    attachments, cc_email, bcc_email, server_port)
 
 
 def run_async(func, *args, **kwargs):
@@ -1457,3 +1453,51 @@ def run_async(func, *args, **kwargs):
     future = executor.submit(func, *args, **kwargs)
     executor.shutdown(wait=False)  # Don't wait for other futures to complete
     return future
+
+
+class ConcurrentRunner:
+    """
+    A class to run functions asynchronously using a ThreadPoolExecutor.
+
+    Args:
+        max_workers (int): The maximum number of threads to use. Defaults to 10.
+        task_type (str): The type of task to run, either 'thread' or 'process'. Defaults to 'thread'.
+            process best for cpu bound tasks like data processing, thread for io bound tasks like api calls
+
+    Methods:
+        run(func, args_list):
+            Runs the given function asynchronously with the provided arguments.
+
+    Example:
+        def sample_function(x, y):
+            return x + y
+
+        runner = AsyncRunner(max_workers=5)
+        args_list = [(1, 2), (3, 4), (5, 6)]
+        results = runner.run(sample_function, args_list)
+        for args, result in results:
+            print(f"Args: {args}, Result: {result}")
+
+    Another Example:
+        runner = AsyncRunner(max_workers=10)
+        results = runner.run(num_squared, [(num,) for num in [1,2,3,4,5]])
+    """
+
+    def __init__(self, max_workers: int = 10, task_type: str = 'thread'):
+        self.max_workers = max_workers
+        self.task_type = task_type
+
+    def run(self, func, args_list):
+        results = []
+        executor_class = concurrent.futures.ProcessPoolExecutor if self.task_type == 'process' else concurrent.futures.ThreadPoolExecutor
+        with executor_class(max_workers=self.max_workers) as executor:
+            future_to_args = {executor.submit(func, *args): args for args in args_list}
+        for future in tqdm(concurrent.futures.as_completed(future_to_args), total=len(future_to_args),
+                           desc="Processing"):
+                args = future_to_args[future]
+                try:
+                    result = future.result()
+                    results.append((args, result))
+                except Exception as exc:
+                    results.append((args, exc))
+        return results

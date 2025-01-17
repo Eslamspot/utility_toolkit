@@ -18,6 +18,10 @@ pip install utility_toolkit
 
 ## Changes and What's New
 
+- **Version 0.2.2** (Date: 2025-01-17)
+  - Fix issue in postgresql handler
+  - Enhance functions in general tools.
+
 - **Version 0.2.1** (Date: 2024-10-21)
   - Fix import issue.
 
