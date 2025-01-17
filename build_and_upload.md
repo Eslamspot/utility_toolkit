@@ -119,8 +119,8 @@ update your code in develop branch
 clone this code to a new branch
 ```bash
 git tag -a v0.2.2 -m "release 0.2.2"
-git push origin v0.2.2
 git commit -m "release 0.2.2"
+git push origin v0.2.2
 git push origin release-0.2.2
 git push bitbucket v0.2.2
 git push origin release-0.2.2
