@@ -18,6 +18,11 @@ pip install utility_toolkit
 
 ## Changes and What's New
 
+- **Version 0.2.3** (Date: 2025-06-10)
+  - Add new functions to DynamoDB to retrieve all records from a table.
+  - Enhance PostgreSQL handler with insert many and copy from CSV functions.
+  - Improve SQS handler by adding more connection pool options.
+
 - **Version 0.2.2** (Date: 2025-01-17)
   - Fix issue in postgresql handler
   - Enhance functions in general tools.
