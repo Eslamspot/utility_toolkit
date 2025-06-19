@@ -1,6 +1,9 @@
 import json
 from typing import List, Dict, Any, Optional
-
+import sys
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import botocore
 import boto3
 from botocore.exceptions import ClientError
 
@@ -23,12 +26,14 @@ class SQSHandler:
         if user_profile:
             boto3.setup_default_session(profile_name=user_profile,
                                         region_name=region_name)
-        self.sqs = boto3.client('sqs', region_name=region_name)
+        self.client_config = botocore.config.Config(
+            max_pool_connections=50)
+        self.sqs = boto3.client('sqs', region_name=region_name, config=self.client_config)
         self.logger = log.setup_logger(__name__, log_to_console=True)
 
     def send_message(self, message_body: str or dict, message_attributes: Optional[Dict[str, Dict[str, str]]] = None) -> \
-    Dict[
-        str, Any]:
+            Dict[
+                str, Any]:
         """
         Send a message to the SQS queue.
 
@@ -55,7 +60,6 @@ class SQSHandler:
                 params['MessageAttributes'] = message_attributes
 
             response = self.sqs.send_message(**params)
-            self.logger.info(f"Message sent. MessageId: {response['MessageId']}")
             return response
         except ClientError as e:
             self.logger.error(f"Failed to send message: {e}")
@@ -201,3 +205,74 @@ class SQSHandler:
         except ClientError as e:
             self.logger.error(f"Failed to count messages: {e}")
             raise
+
+    def delete_all_messages(self, num_threads=10):
+        """
+        Deletes all messages from the SQS queue with a progress indicator and parallel processing.
+
+        Args:
+            num_threads (int): Number of threads to use for parallel processing. Defaults to 10.
+
+        Example:
+            handler = SQSHandler('https://sqs.us-east-1.amazonaws.com/123456789012/my-queue')
+            handler.delete_all_messages()
+        """
+        try:
+            total_deleted = 0
+            with ThreadPoolExecutor(max_workers=num_threads) as executor:
+                futures = []
+                while True:
+                    messages = self.sqs.receive_message(
+                        QueueUrl=self.queue_url,
+                        MaxNumberOfMessages=10,
+                        WaitTimeSeconds=1
+                    ).get('Messages', [])
+
+                    if not messages:
+                        break
+
+                    futures.append(executor.submit(self._delete_messages_batch, messages))
+
+                for future in as_completed(futures):
+                    result = future.result()
+                    total_deleted += result
+                    self._print_progress(total_deleted)
+
+            self.logger.info(f"Successfully deleted {total_deleted} messages from the queue.")
+
+        except ClientError as e:
+            self.logger.error(f"Failed to delete messages: {e}")
+            raise
+
+    def _delete_messages_batch(self, messages):
+        """
+        Deletes a batch of messages from the SQS queue.
+
+        Args:
+            messages (list): List of messages to delete.
+
+        Returns:
+            int: Number of messages deleted.
+        """
+        entries = [{'Id': msg['MessageId'], 'ReceiptHandle': msg['ReceiptHandle']} for msg in messages]
+        response = self.sqs.delete_message_batch(
+            QueueUrl=self.queue_url,
+            Entries=entries
+        )
+
+        if 'Failed' in response:
+            self.logger.error(f"Failed to delete some messages: {response['Failed']}")
+            raise Exception(f"Failed to delete some messages: {response['Failed']}")
+
+        return len(entries)
+
+    def _print_progress(self, total_deleted):
+        """
+        Prints a progress indicator for the number of deleted messages.
+
+        Args:
+            total_deleted (int): The total number of messages deleted so far.
+        """
+        sys.stdout.write(f"\rTotal messages deleted: {total_deleted}")
+        sys.stdout.flush()
+        time.sleep(0.1)
