@@ -75,7 +75,7 @@ twine upload dist/* --skip-existing
 
 ## create version and take changes from develop branch
 ```bash
-git checkout -b release-0.2.2
+git checkout -b release-0.2.3
 ```
 
 Fetch the latest changes from the remote repository:
@@ -118,13 +118,13 @@ update your code in develop branch
 
 clone this code to a new branch
 ```bash
-git tag -a v0.2.2 -m "release 0.2.2"
-git push origin v0.2.2
-git commit -m "release 0.2.2"
-git push origin release-0.2.2
-git push bitbucket v0.2.2
-git push origin release-0.2.2
-git push bitbucket release-0.2.2
+git tag -a v0.2.3 -m "release 0.2.3"
+git commit -m "release 0.2.3"
+git push origin v0.2.3
+git push origin release-0.2.3
+git push bitbucket v0.2.3
+git push origin release-0.2.3
+git push bitbucket release-0.2.3
 ```
 
 
