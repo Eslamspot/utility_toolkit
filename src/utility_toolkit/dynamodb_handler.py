@@ -1,8 +1,9 @@
 import logging
 import time
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Union, Generator
 
 import boto3
+import botocore
 from boto3.dynamodb.conditions import Key, Attr
 from botocore.exceptions import ClientError
 
@@ -53,9 +54,11 @@ class DynamoDBHandler:
         """
         if profile_name:
             session = boto3.Session(profile_name=profile_name, region_name=region_name)
-            self.dynamodb = session.resource('dynamodb')
+            self.client_config = botocore.config.Config(max_pool_connections=50)
+            self.dynamodb = session.resource('dynamodb', config=self.client_config)
         else:
-            self.dynamodb = boto3.resource('dynamodb', region_name=region_name)
+            self.client_config = botocore.config.Config(max_pool_connections=50)
+            self.dynamodb = boto3.resource('dynamodb', region_name=region_name, config=self.client_config)
         self.table = self.dynamodb.Table(table_name)
 
     def create_item(self, item: Dict[str, Any]) -> bool:
@@ -836,3 +839,54 @@ class DynamoDBHandler:
         except ClientError as e:
             logger.error(f"Error updating table: {e}")
             return False
+
+    def get_all_records_by_filter(self, filter_expression: Attr, use_generator: bool = False,
+                                  index_name: Optional[str] = None) -> Union[
+        List[Dict[str, Any]], Generator[Dict[str, Any], None, None]]:
+        """
+        Get all records matching a filter expression, with option for list or generator return.
+        
+        Args:
+            filter_expression (Attr): Filter expression for scanning items
+            use_generator (bool): If True returns generator, if False returns list
+            index_name (Optional[str]): Name of the index to use
+            
+        Returns:
+            Union[List[Dict], Generator]: List or generator of matching items
+            
+        Example:
+            # Get all failed items as list
+            failed_items = handler.get_all_records_by_filter(
+                filter_expression=Attr('status').eq('failed')
+            )
+            
+            # Get all failed items as generator
+            for item in handler.get_all_records_by_filter(
+                filter_expression=Attr('status').eq('failed'),
+                use_generator=True
+            ):
+                process_item(item)
+        """
+        last_evaluated_key = None
+
+        while True:
+            result = self.scan_items_with_pagination(
+                filter_expression=filter_expression,
+                index_name=index_name,
+                last_evaluated_key=last_evaluated_key
+            )
+
+            if use_generator:
+                for item in result['Items']:
+                    yield item
+            else:
+                if not 'items' in locals():
+                    items = []
+                items.extend(result['Items'])
+
+            last_evaluated_key = result.get('LastEvaluatedKey')
+            if not last_evaluated_key:
+                break
+
+        if not use_generator:
+            return items
